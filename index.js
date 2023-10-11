@@ -10,7 +10,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "https://chat-app-react-tan.vercel.app",
+        origin: true,
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     }
 });
