@@ -18,7 +18,7 @@ const io = new Server(server, {
 function startHeartbeat(socket) {
     socket.heartbeatInterval = setInterval(() => {
       socket.emit('heartbeat', Date.now());
-    }, 8000); // Send a heartbeat every 5 seconds
+    }, 20000); // Send a heartbeat every 20 seconds
   
     socket.on('heartbeat', () => {
       // Respond to the heartbeat
@@ -31,6 +31,8 @@ function startHeartbeat(socket) {
 
 let onlineUsers = []
 let messages = []
+let typingUsers = []
+
 //Add this before the app.get() block
 io.on('connection', (socket) => {
     console.log(` ${socket.id} connected!`);
@@ -47,7 +49,17 @@ io.on('connection', (socket) => {
     })
 
     socket.on('typing', ({isTyping, username}) => {
-        socket.broadcast.emit('typing', {isTyping, username: !isTyping ? '': username})
+        if(isTyping){
+            if(!typingUsers?.includes(username))
+            {
+                typingUsers.push(username)
+            }
+        } else {
+            const updatedTypingUsers = typingUsers.filter((user) => user !== username)
+            typingUsers = updatedTypingUsers
+        }
+
+        io.emit('typing', {isTyping, typingUsers})
     })
 
     socket.on('send-message', ({message, user}) => {
@@ -59,6 +71,9 @@ io.on('connection', (socket) => {
     socket.on('logout', (user) => {
         const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
         onlineUsers = updatedOnlineUsers
+        const updatedTypingUsers = typingUsers.filter((user) => user !== user)
+        typingUsers = updatedTypingUsers
+        io.emit('typing', {isTyping: false, typingUsers})
         io.emit('online', onlineUsers)
         messages.push({user: 'Admin', message: `${user} left...`, socketId: socket.id})
         io.emit('messages', messages)
@@ -71,12 +86,16 @@ io.on('connection', (socket) => {
         if(user){
             messages.push({user: 'Admin', message: `${user?.username} left...`, socketId: socket.id})
             io.emit('messages', messages)
+            const updatedTypingUsers = typingUsers.filter((user) => user !== user.username)
+            typingUsers = updatedTypingUsers
+            io.emit('typing', {isTyping: false, typingUsers})
         }
         const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
         onlineUsers = updatedOnlineUsers
         io.emit('online', onlineUsers)
         stopHeartbeat(socket);
         console.log(' A user disconnected');
+       
     });
 });
 
