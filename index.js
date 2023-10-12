@@ -10,7 +10,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "https://real-chat-app-tmow.onrender.com/",
+        origin: true,
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     }
 });
