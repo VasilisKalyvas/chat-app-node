@@ -15,20 +15,6 @@ const io = new Server(server, {
     }
 });
 
-function startHeartbeat(socket) {
-    socket.heartbeatInterval = setInterval(() => {
-      socket.emit('heartbeat', Date.now());
-    }, 20000); // Send a heartbeat every 20 seconds
-  
-    socket.on('heartbeat', () => {
-      // Respond to the heartbeat
-    });
-  }
-  
-  function stopHeartbeat(socket) {
-    clearInterval(socket.heartbeatInterval);
-  }
-
 let onlineUsers = []
 let messages = []
 let typingUsers = []
@@ -43,7 +29,6 @@ io.on('connection', (socket) => {
         if(onlineUsers?.includes(user => user.socketId === socket.id)) return
         onlineUsers.push({username: username, socketId: socket.id})
         io.emit('online', onlineUsers)
-        startHeartbeat(socket);
         messages.push({user: 'Admin', message: `${username} Joined...`, socketId: socket.id, isAdmin: true})
         socket.broadcast.emit('messages', messages)
     })
@@ -76,7 +61,6 @@ io.on('connection', (socket) => {
         io.emit('online', onlineUsers)
         messages.push({user: 'Admin', message: `${user} left...`, socketId: socket.id})
         io.emit('messages', messages)
-        stopHeartbeat(socket);
         console.log(' A user disconnected');
     })
 
@@ -92,7 +76,6 @@ io.on('connection', (socket) => {
         const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
         onlineUsers = updatedOnlineUsers
         io.emit('online', onlineUsers)
-        stopHeartbeat(socket);
         console.log(' A user disconnected');
        
     });
