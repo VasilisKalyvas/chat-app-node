@@ -48,17 +48,16 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('messages', messages)
     })
 
-    socket.on('typing', ({isTyping, username}) => {
+    socket.on('typing', ({isTyping, username, socketId}) => {
         if(isTyping){
-            if(!typingUsers?.includes(username))
+            if(!typingUsers?.find(user => user.socketId === socketId))
             {
-                typingUsers.push(username)
+                typingUsers.push({username: username, socketId: socketId})
             }
         } else {
-            const updatedTypingUsers = typingUsers.filter((user) => user !== username)
+            const updatedTypingUsers = typingUsers.filter((user) => user.socketId !== socketId)
             typingUsers = updatedTypingUsers
         }
-
         io.emit('typing', {isTyping, typingUsers})
     })
 
