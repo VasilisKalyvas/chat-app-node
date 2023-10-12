@@ -10,10 +10,24 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "https://chat-app-react-tan.vercel.app/",
+        origin: "https://real-chat-app-tmow.onrender.com/",
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     }
 });
+
+function startHeartbeat(socket) {
+    socket.heartbeatInterval = setInterval(() => {
+      socket.emit('heartbeat', Date.now());
+    }, 8000); // Send a heartbeat every 5 seconds
+  
+    socket.on('heartbeat', () => {
+      // Respond to the heartbeat
+    });
+  }
+  
+  function stopHeartbeat(socket) {
+    clearInterval(socket.heartbeatInterval);
+  }
 
 let onlineUsers = []
 let messages = []
@@ -27,6 +41,13 @@ io.on('connection', (socket) => {
         if(onlineUsers?.includes(user => user.socketId === socket.id)) return
         onlineUsers.push({username: username, socketId: socket.id})
         io.emit('online', onlineUsers)
+        startHeartbeat(socket);
+        messages.push({user: 'Admin', message: `${username} Joined...`, socketId: socket.id, isAdmin: true})
+        socket.broadcast.emit('messages', messages)
+    })
+
+    socket.on('typing', ({isTyping, username}) => {
+        socket.broadcast.emit('typing', {isTyping, username: !isTyping ? '': username})
     })
 
     socket.on('send-message', ({message, user}) => {
@@ -35,11 +56,27 @@ io.on('connection', (socket) => {
         io.emit('messages', messages)
     })
 
-    socket.on('disconnect', () => {
+    socket.on('logout', (user) => {
         const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
         onlineUsers = updatedOnlineUsers
         io.emit('online', onlineUsers)
-      console.log(' A user disconnected');
+        messages.push({user: 'Admin', message: `${user} left...`, socketId: socket.id})
+        io.emit('messages', messages)
+        stopHeartbeat(socket);
+        console.log(' A user disconnected');
+    })
+
+    socket.on('disconnect', () => {
+        const user = onlineUsers.find(user => user?.socketId === socket.id)
+        if(user){
+            messages.push({user: 'Admin', message: `${user?.username} left...`, socketId: socket.id})
+            io.emit('messages', messages)
+        }
+        const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
+        onlineUsers = updatedOnlineUsers
+        io.emit('online', onlineUsers)
+        stopHeartbeat(socket);
+        console.log(' A user disconnected');
     });
 });
 
