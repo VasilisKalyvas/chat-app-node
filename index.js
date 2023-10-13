@@ -31,9 +31,6 @@ io.on('connection', (socket) => {
         io.emit('online', onlineUsers)
         messages.push({user: 'Admin', message: `${username} Joined...`, socketId: socket.id, isAdmin: true})
         socket.broadcast.emit('messages', messages)
-
-        //logs
-        console.log('login',onlineUsers)
     })
 
     socket.on('typing', ({isTyping, username, socketId}) => {
@@ -65,37 +62,22 @@ io.on('connection', (socket) => {
         messages.push({user: 'Admin', message: `${user} left...`, socketId: socket.id})
         io.emit('messages', messages)
         console.log(' A user disconnected');
-        console.log('logout', onlineUsers)
+        //console.log('logout', onlineUsers)
     })
 
-    socket.on('disconnect', (reason) => {
-        if(reason?.length){
-            console.log('reason')
-            const user = onlineUsers.find(user => user.socketId === socket.id)
-            if(user){
-                messages.push({user: 'Admin', message: `${user?.username} left...`, socketId: socket.id})
-                io.emit('messages', messages)
-                const updatedTypingUsers = typingUsers.filter((user) => user !== user.username)
-                typingUsers = updatedTypingUsers
-                io.emit('typing', {isTyping: false, typingUsers})
+    socket.on('disconnect', () => {
+        console.log('unwanted disconnect')
+        const updatedOnlineUsers = onlineUsers.map(user => {
+            if(user?.socketId === socket.id){
+                console.log('true')
+                return {...user, socketId: socket.id}
+            } else {
+                return user
             }
-            const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
-            onlineUsers = updatedOnlineUsers
-            console.log(' A user disconnected');
-        } else{
-            console.log('no-reason')
-            const updatedOnlineUsers = onlineUsers.map(user => {
-                if(user?.socketId === socket.id){
-                    return {...user, socketId: socket.id}
-                } else {
-                    return user
-                }
-            })
-            onlineUsers = updatedOnlineUsers
-        }
-        console.log(onlineUsers)
+        })
+        onlineUsers = updatedOnlineUsers
         io.emit('online', onlineUsers)
-        console.log('disc', onlineUsers)
+        //console.log('unwanted-disc', onlineUsers)
     });
 });
 
