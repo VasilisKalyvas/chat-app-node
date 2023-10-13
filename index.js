@@ -51,36 +51,40 @@ io.on('connection', (socket) => {
         messages.push({user: user, message: message, socketId: socket.id})
         io.emit('messages', messages)
     })
-
-    socket.on('logout', (user) => {
+    
+    socket.on('disconnect', (reason) => {
+        const user = onlineUsers.find((user) => user.socketId === socket.id)
         if(user){
-            const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
-            onlineUsers = updatedOnlineUsers
+            if(!reason?.length){
+                console.log('unwanted disconnect')
+                const updatedOnlineUsers = onlineUsers.map(user => {
+                    if(user?.socketId === socket.id){
+                        console.log('true')
+                        return {...user, socketId: socket.id}
+                    } else {
+                        return user
+                    }
+                })
+                onlineUsers = updatedOnlineUsers
+                io.emit('online', onlineUsers)
+           
+            }else {
+                messages.push({user: 'Admin', message: `${user.username} left...`, socketId: socket.id})
 
-            const updatedTypingUsers = typingUsers.filter((user) => user !== user)
-            typingUsers = updatedTypingUsers
+                const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
+                onlineUsers = updatedOnlineUsers
 
-            io.emit('typing', {isTyping: false, typingUsers})
-            io.emit('online', onlineUsers)
+                const updatedTypingUsers = typingUsers.filter((user) => user !== user)
+                typingUsers = updatedTypingUsers
 
-            messages.push({user: 'Admin', message: `${user} left...`, socketId: socket.id})
-            io.emit('messages', messages)
-            console.log(' A user disconnected');
-        }
-    })
+                io.emit('typing', {isTyping: false, typingUsers})
+                io.emit('online', onlineUsers)
 
-    socket.on('disconnect', () => {
-        console.log('unwanted disconnect')
-        const updatedOnlineUsers = onlineUsers.map(user => {
-            if(user?.socketId === socket.id){
-                console.log('true')
-                return {...user, socketId: socket.id}
-            } else {
-                return user
+            
+                io.emit('messages', messages)
+                console.log(' A user disconnected');
             }
-        })
-        onlineUsers = updatedOnlineUsers
-        io.emit('online', onlineUsers)
+        }
     });
 });
 
