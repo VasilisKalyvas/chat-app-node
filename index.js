@@ -51,7 +51,26 @@ io.on('connection', (socket) => {
         messages.push({user: user, message: message, socketId: socket.id})
         io.emit('messages', messages)
     })
-    
+
+    socket.on('logout', (user) => {
+        if(user){
+            messages.push({user: 'Admin', message: `${user.username} left...`, socketId: socket.id})
+
+                const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
+                onlineUsers = updatedOnlineUsers
+
+                const updatedTypingUsers = typingUsers.filter((user) => user !== user)
+                typingUsers = updatedTypingUsers
+
+                io.emit('typing', {isTyping: false, typingUsers})
+                io.emit('online', onlineUsers)
+
+            
+                io.emit('messages', messages)
+                console.log(' A user disconnected');
+        }
+    })
+
     socket.on('disconnect', (reason) => {
         const user = onlineUsers.find((user) => user.socketId === socket.id)
         if(user){
