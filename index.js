@@ -22,6 +22,8 @@ let typingUsers = []
 //Add this before the app.get() block
 io.on('connection', (socket) => {
     console.log(` ${socket.id} connected!`);
+    io.emit('connected', {isConnected: true})
+
     io.emit('online', onlineUsers)
     io.emit('messages', messages)
 
@@ -67,6 +69,7 @@ io.on('connection', (socket) => {
 
             
                 io.emit('messages', messages)
+                io.emit('connected', {isConnected: false})
                 console.log(' A user disconnected');
         }
     })
@@ -101,6 +104,7 @@ io.on('connection', (socket) => {
 
             
                 io.emit('messages', messages)
+                io.emit('connected', {isConnected: false})
                 console.log(' A user disconnected');
             }
         }
