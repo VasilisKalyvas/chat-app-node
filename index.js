@@ -52,14 +52,14 @@ io.on('connection', (socket) => {
         io.emit('messages', messages)
     })
 
-    socket.on('logout', (user) => {
-        if(user){
-            messages.push({user: 'Admin', message: `${user.username} left...`, socketId: socket.id})
+    socket.on('logout', (username) => {
+        if(username?.length){
+            messages.push({user: 'Admin', message: `${username} left...`, socketId: socket.id})
 
                 const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
                 onlineUsers = updatedOnlineUsers
 
-                const updatedTypingUsers = typingUsers.filter((user) => user !== user)
+                const updatedTypingUsers = typingUsers.filter((user) => user !== username)
                 typingUsers = updatedTypingUsers
 
                 io.emit('typing', {isTyping: false, typingUsers})
