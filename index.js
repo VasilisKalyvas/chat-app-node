@@ -53,16 +53,20 @@ io.on('connection', (socket) => {
     })
 
     socket.on('logout', (user) => {
-        const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
-        onlineUsers = updatedOnlineUsers
-        const updatedTypingUsers = typingUsers.filter((user) => user !== user)
-        typingUsers = updatedTypingUsers
-        io.emit('typing', {isTyping: false, typingUsers})
-        io.emit('online', onlineUsers)
-        messages.push({user: 'Admin', message: `${user} left...`, socketId: socket.id})
-        io.emit('messages', messages)
-        console.log(' A user disconnected');
-        //console.log('logout', onlineUsers)
+        if(user){
+            const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
+            onlineUsers = updatedOnlineUsers
+
+            const updatedTypingUsers = typingUsers.filter((user) => user !== user)
+            typingUsers = updatedTypingUsers
+
+            io.emit('typing', {isTyping: false, typingUsers})
+            io.emit('online', onlineUsers)
+
+            messages.push({user: 'Admin', message: `${user} left...`, socketId: socket.id})
+            io.emit('messages', messages)
+            console.log(' A user disconnected');
+        }
     })
 
     socket.on('disconnect', () => {
@@ -77,7 +81,6 @@ io.on('connection', (socket) => {
         })
         onlineUsers = updatedOnlineUsers
         io.emit('online', onlineUsers)
-        //console.log('unwanted-disc', onlineUsers)
     });
 });
 
