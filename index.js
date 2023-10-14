@@ -76,8 +76,9 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', (reason) => {
         const user = onlineUsers.find((user) => user.socketId === socket.id)
+        console.log('reason', reason)
         if(user){
-            if(!reason?.length){
+            if(reason !== 'client namespace disconnect'){
                 console.log('unwanted disconnect')
                 const updatedOnlineUsers = onlineUsers.map(user => {
                     if(user?.socketId === socket.id){
@@ -90,7 +91,7 @@ io.on('connection', (socket) => {
                 onlineUsers = updatedOnlineUsers
                 io.emit('online', onlineUsers)
            
-            }else {
+            } else {
                 messages.push({user: 'Admin', message: `${user.username} left...`, socketId: socket.id})
 
                 const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
