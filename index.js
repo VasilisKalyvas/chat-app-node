@@ -1,19 +1,22 @@
 const express = require("express");
-const app = express();
 const http = require("http");
 const cors = require("cors");
-const { Server } = require('socket.io')
-const PORT = 4000
-app.use(cors());
+const { Server } = require('socket.io');
 
-const server = http.createServer(app);
+const socketApp = express(); // Create an Express app for socket.io
 
-const io = new Server(server, {
-    cors: {
-        origin: true,
-        methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    }
+const httpServer = http.createServer(socketApp); // Create an HTTP server for socket.io
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: true,
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  }
 });
+
+const PORT = 4000;
+
+socketApp.use(cors());
 
 let onlineUsers = []
 let messages = []
@@ -31,7 +34,7 @@ io.on('connection', (socket) => {
         if(onlineUsers?.includes(user => user.socketId === socket.id)) return
         onlineUsers.push({username: username, socketId: socket.id})
         io.emit('online', onlineUsers)
-        messages.push({user: 'Admin', message: `${username} Joined...`, socketId: socket.id, isAdmin: true})
+        messages.push({user: 'Admin', message: {content: `${username} Joined...`, type: 'message'}, socketId: socket.id, isAdmin: true})
         socket.broadcast.emit('messages', messages)
     })
 
@@ -49,14 +52,14 @@ io.on('connection', (socket) => {
     })
 
     socket.on('send-message', ({message, user}) => {
-        if(!message?.length) return
+        if(!message?.content?.length) return
         messages.push({user: user, message: message, socketId: socket.id})
         io.emit('messages', messages)
     })
 
     socket.on('logout', (username) => {
         if(username?.length){
-            messages.push({user: 'Admin', message: `${username} left...`, socketId: socket.id})
+            messages.push({user: 'Admin', message:{content: `${username} left...`, type: 'message'}, socketId: socket.id})
 
                 const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
                 onlineUsers = updatedOnlineUsers
@@ -76,7 +79,6 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', (reason) => {
         const user = onlineUsers.find((user) => user.socketId === socket.id)
-        console.log('reason', reason)
         if(user){
             if(reason !== 'client namespace disconnect'){
                 console.log('unwanted disconnect')
@@ -92,7 +94,7 @@ io.on('connection', (socket) => {
                 io.emit('online', onlineUsers)
            
             } else {
-                messages.push({user: 'Admin', message: `${user.username} left...`, socketId: socket.id})
+                messages.push({user: 'Admin', message: { content: `${user.username} left...`, type: 'message'}, socketId: socket.id})
 
                 const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
                 onlineUsers = updatedOnlineUsers
@@ -112,6 +114,6 @@ io.on('connection', (socket) => {
     });
 });
 
-server.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`SERVER IS RUNNING ${PORT}`);
 });
