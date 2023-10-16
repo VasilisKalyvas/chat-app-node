@@ -4,8 +4,9 @@ This a real time chat app build with React js Socket.io and Nodejs.
 Features:
 <br />
 <br />
-1. Display online users in real time.
+
  <br />
+1. Display online users in real time. <br />
 2. Messaging in real time.
 <br/>
 3. Detect typing of a user and send the event to all clients.
