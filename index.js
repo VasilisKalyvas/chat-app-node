@@ -59,7 +59,7 @@ io.on('connection', (socket) => {
 
     socket.on('logout', (username) => {
         if(username?.length){
-            messages.push({user: 'Admin', message:{content: `${username} left...`, type: 'message'}, socketId: socket.id})
+                messages.push({user: 'Admin', message:{content: `${username} left...`, type: 'message'}, socketId: socket.id})
 
                 const updatedOnlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id)
                 onlineUsers = updatedOnlineUsers
@@ -72,7 +72,6 @@ io.on('connection', (socket) => {
 
             
                 io.emit('messages', messages)
-                io.emit('connected', {isConnected: false})
                 console.log(' A user disconnected');
         }
     })
@@ -107,7 +106,6 @@ io.on('connection', (socket) => {
 
             
                 io.emit('messages', messages)
-                io.emit('connected', {isConnected: false})
                 console.log(' A user disconnected');
             }
         }
