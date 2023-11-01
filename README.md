@@ -10,4 +10,3 @@ Features:
 5. Admin messages to notify users if someone left or join the chat.
 Deployed in Render
 <br />
-Link of the app: https://real-chat-app-tmow.onrender.com/
